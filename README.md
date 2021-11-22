@@ -26,7 +26,7 @@ import "github.com/jimeh/go-mocktesting"
 ## Usage
 
 ```go
-func Example_basic() {
+func ExampleT_Error() {
 	assertTrue := func(t testing.TB, v bool) {
 		if v != true {
 			t.Error("expected false to be true")
@@ -58,7 +58,7 @@ func Example_basic() {
 ```
 
 ```go
-func Example_fatal() {
+func ExampleT_Fatal() {
 	requireTrue := func(t testing.TB, v bool) {
 		if v != true {
 			t.Fatal("expected false to be true")
@@ -66,20 +66,20 @@ func Example_fatal() {
 	}
 
 	mt := mocktesting.NewT("TestMyBoolean1")
-	requireTrue(mt, true)
 	fmt.Printf("Name: %s\n", mt.Name())
+	requireTrue(mt, true)
 	fmt.Printf("Failed: %+v\n", mt.Failed())
 	fmt.Printf("Aborted: %+v\n", mt.Aborted())
 
 	mt = mocktesting.NewT("TestMyBoolean2")
+	fmt.Printf("Name: %s\n", mt.Name())
 	mocktesting.Go(func() {
 		requireTrue(mt, false)
 		fmt.Println("This is never executed.")
 	})
-	fmt.Printf("Name: %s\n", mt.Name())
 	fmt.Printf("Failed: %+v\n", mt.Failed())
 	fmt.Printf("Aborted: %+v\n", mt.Aborted())
-	fmt.Printf("Output: %s\n", strings.Join(mt.Output(), ""))
+	fmt.Printf("Output:\n  - %s\n", strings.Join(mt.Output(), "\n  - "))
 
 	// Output:
 	// Name: TestMyBoolean1
@@ -88,12 +88,13 @@ func Example_fatal() {
 	// Name: TestMyBoolean2
 	// Failed: true
 	// Aborted: true
-	// Output: expected false to be true
+	// Output:
+	//   - expected false to be true
 }
 ```
 
 ```go
-func Example_subtests() {
+func ExampleT_Run() {
 	requireTrue := func(t testing.TB, v bool) {
 		if v != true {
 			t.Fatal("expected false to be true")
@@ -101,10 +102,10 @@ func Example_subtests() {
 	}
 
 	mt := mocktesting.NewT("TestMyBoolean")
+	fmt.Printf("Name: %s\n", mt.Name())
 	mt.Run("true", func(t testing.TB) {
 		requireTrue(t, true)
 	})
-	fmt.Printf("Name: %s\n", mt.Name())
 	fmt.Printf("Failed: %+v\n", mt.Failed())
 	fmt.Printf("Sub1-Name: %s\n", mt.Subtests()[0].Name())
 	fmt.Printf("Sub1-Failed: %+v\n", mt.Subtests()[0].Failed())
@@ -118,7 +119,9 @@ func Example_subtests() {
 	fmt.Printf("Sub2-Name: %s\n", mt.Subtests()[1].Name())
 	fmt.Printf("Sub2-Failed: %+v\n", mt.Subtests()[1].Failed())
 	fmt.Printf("Sub2-Aborted: %+v\n", mt.Subtests()[1].Aborted())
-	fmt.Printf("Sub2-Output: %s\n", strings.Join(mt.Subtests()[1].Output(), ""))
+	fmt.Printf("Sub2-Output:\n  - %s\n",
+		strings.Join(mt.Subtests()[1].Output(), "\n  - "),
+	)
 
 	// Output:
 	// Name: TestMyBoolean
@@ -130,7 +133,8 @@ func Example_subtests() {
 	// Sub2-Name: TestMyBoolean/false
 	// Sub2-Failed: true
 	// Sub2-Aborted: true
-	// Sub2-Output: expected false to be true
+	// Sub2-Output:
+	//   - expected false to be true
 }
 ```
 
