@@ -2458,3 +2458,46 @@ func TestT_Subtests(t *testing.T) {
 		})
 	}
 }
+
+func TestT_TempDirs(t *testing.T) {
+	type fields struct {
+		tempdirs []string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []string
+	}{
+		{
+			name:   "nil",
+			fields: fields{tempdirs: nil},
+			want:   []string{},
+		},
+		{
+			name:   "empty",
+			fields: fields{tempdirs: []string{}},
+			want:   []string{},
+		},
+		{
+			name:   "one dir",
+			fields: fields{tempdirs: []string{"/tmp/foo"}},
+			want:   []string{"/tmp/foo"},
+		},
+		{
+			name: "many dirs",
+			fields: fields{
+				tempdirs: []string{"/tmp/foo", "/tmp/foo", "/tmp/nope"},
+			},
+			want: []string{"/tmp/foo", "/tmp/foo", "/tmp/nope"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mt := &T{tempdirs: tt.fields.tempdirs}
+
+			got := mt.TempDirs()
+
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}

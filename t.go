@@ -424,3 +424,18 @@ func (t *T) Subtests() []*T {
 
 	return t.subtests
 }
+
+// TempDirs returns a string slice of temporary directories created by
+// TempDir().
+func (t *T) TempDirs() []string {
+	if t.tempdirs == nil {
+		t.mux.Lock()
+		t.tempdirs = []string{}
+		t.mux.Unlock()
+	}
+
+	t.mux.RLock()
+	defer t.mux.RUnlock()
+
+	return t.tempdirs
+}
