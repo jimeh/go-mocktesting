@@ -2371,9 +2371,9 @@ func TestT_HelperNames(t *testing.T) {
 	}
 }
 
-func TestT_Halted(t *testing.T) {
+func TestT_Aborted(t *testing.T) {
 	type fields struct {
-		halted bool
+		aborted bool
 	}
 	tests := []struct {
 		name   string
@@ -2381,19 +2381,19 @@ func TestT_Halted(t *testing.T) {
 		want   bool
 	}{
 		{
-			name:   "not halted",
-			fields: fields{halted: false},
+			name:   "not aborted",
+			fields: fields{aborted: false},
 			want:   false,
 		},
 		{
-			name:   "halted",
-			fields: fields{halted: true},
+			name:   "aborted",
+			fields: fields{aborted: true},
 			want:   true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mt := &T{aborted: tt.fields.halted}
+			mt := &T{aborted: tt.fields.aborted}
 
 			got := mt.Aborted()
 
@@ -2453,6 +2453,49 @@ func TestT_Subtests(t *testing.T) {
 			mt := &T{subtests: tt.fields.subtests}
 
 			got := mt.Subtests()
+
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestT_TempDirs(t *testing.T) {
+	type fields struct {
+		tempdirs []string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []string
+	}{
+		{
+			name:   "nil",
+			fields: fields{tempdirs: nil},
+			want:   []string{},
+		},
+		{
+			name:   "empty",
+			fields: fields{tempdirs: []string{}},
+			want:   []string{},
+		},
+		{
+			name:   "one dir",
+			fields: fields{tempdirs: []string{"/tmp/foo"}},
+			want:   []string{"/tmp/foo"},
+		},
+		{
+			name: "many dirs",
+			fields: fields{
+				tempdirs: []string{"/tmp/foo", "/tmp/foo", "/tmp/nope"},
+			},
+			want: []string{"/tmp/foo", "/tmp/foo", "/tmp/nope"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mt := &T{tempdirs: tt.fields.tempdirs}
+
+			got := mt.TempDirs()
 
 			assert.Equal(t, tt.want, got)
 		})
