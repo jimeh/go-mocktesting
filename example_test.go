@@ -1,31 +1,13 @@
-<h1 align="center">
-  go-mocktesting
-</h1>
+package mocktesting_test
 
-<p align="center">
-  <strong>
-    Mock *testing.T for the purpose of testing test helpers.
-  </strong>
-</p>
+import (
+	"fmt"
+	"strings"
+	"testing"
 
-<p align="center">
-  <a href="https://pkg.go.dev/github.com/jimeh/go-mocktesting"><img src="https://img.shields.io/badge/%E2%80%8B-reference-387b97.svg?logo=go&logoColor=white" alt="Go Reference"></a>
-  <a href="https://github.com/jimeh/go-mocktesting/actions"><img src="https://img.shields.io/github/workflow/status/jimeh/go-mocktesting/CI.svg?logo=github" alt="Actions Status"></a>
-  <a href="https://codeclimate.com/github/jimeh/go-mocktesting"><img src="https://img.shields.io/codeclimate/coverage/jimeh/go-mocktesting.svg?logo=code%20climate" alt="Coverage"></a>
-  <a href="https://github.com/jimeh/go-mocktesting/issues"><img src="https://img.shields.io/github/issues-raw/jimeh/go-mocktesting.svg?style=flat&logo=github&logoColor=white" alt="GitHub issues"></a>
-  <a href="https://github.com/jimeh/go-mocktesting/pulls"><img src="https://img.shields.io/github/issues-pr-raw/jimeh/go-mocktesting.svg?style=flat&logo=github&logoColor=white" alt="GitHub pull requests"></a>
-  <a href="https://github.com/jimeh/go-mocktesting/blob/master/LICENSE"><img src="https://img.shields.io/github/license/jimeh/go-mocktesting.svg?style=flat" alt="License Status"></a>
-</p>
+	"github.com/jimeh/go-mocktesting"
+)
 
-## Import
-
-```go
-import "github.com/jimeh/go-mocktesting"
-```
-
-## Usage
-
-```go
 func Example_basic() {
 	assertTrue := func(t testing.TB, v bool) {
 		if v != true {
@@ -55,9 +37,7 @@ func Example_basic() {
 	// Aborted: false
 	// Output: expected false to be true
 }
-```
 
-```go
 func Example_fatal() {
 	requireTrue := func(t testing.TB, v bool) {
 		if v != true {
@@ -90,9 +70,7 @@ func Example_fatal() {
 	// Aborted: true
 	// Output: expected false to be true
 }
-```
 
-```go
 func Example_subtests() {
 	requireTrue := func(t testing.TB, v bool) {
 		if v != true {
@@ -132,14 +110,80 @@ func Example_subtests() {
 	// Sub2-Aborted: true
 	// Sub2-Output: expected false to be true
 }
-```
 
-## Documentation
+func Example_subtests_in_subtests() {
+	assertGreaterThan := func(t testing.TB, got int, min int) {
+		if got <= min {
+			t.Errorf("expected %d to be greater than %d", got, min)
+		}
+	}
 
-Please see the
-[Go Reference](https://pkg.go.dev/github.com/jimeh/go-mocktesting#section-documentation)
-for documentation and examples.
+	mt := mocktesting.NewT("TestMyBoolean")
+	mt.Run("positive", func(t testing.TB) {
+		subMT, _ := t.(*mocktesting.T)
 
-## License
+		subMT.Run("greater than", func(t testing.TB) {
+			assertGreaterThan(t, 5, 4)
+		})
+		subMT.Run("equal", func(t testing.TB) {
+			assertGreaterThan(t, 5, 5)
+		})
+		subMT.Run("less than", func(t testing.TB) {
+			assertGreaterThan(t, 4, 5)
+		})
+	})
+	fmt.Printf("Name: %s\n", mt.Name())
+	fmt.Printf("Failed: %+v\n", mt.Failed())
+	fmt.Printf("Sub1-Name: %s\n", mt.Subtests()[0].Name())
+	fmt.Printf("Sub1-Failed: %+v\n", mt.Subtests()[0].Failed())
+	fmt.Printf("Sub1-Aborted: %+v\n", mt.Subtests()[0].Aborted())
+	fmt.Printf("Sub1-Sub1-Name: %s\n", mt.Subtests()[0].Subtests()[0].Name())
+	fmt.Printf(
+		"Sub1-Sub1-Failed: %+v\n", mt.Subtests()[0].Subtests()[0].Failed(),
+	)
+	fmt.Printf(
+		"Sub1-Sub1-Aborted: %+v\n", mt.Subtests()[0].Subtests()[0].Aborted(),
+	)
+	fmt.Printf("Sub1-Sub1-Name: %s\n", mt.Subtests()[0].Subtests()[1].Name())
+	fmt.Printf(
+		"Sub1-Sub2-Failed: %+v\n", mt.Subtests()[0].Subtests()[1].Failed(),
+	)
+	fmt.Printf(
+		"Sub1-Sub2-Aborted: %+v\n", mt.Subtests()[0].Subtests()[1].Aborted(),
+	)
+	fmt.Printf(
+		"Sub1-Sub3-Output: %s\n", strings.TrimSpace(
+			strings.Join(mt.Subtests()[0].Subtests()[1].Output(), ""),
+		),
+	)
+	fmt.Printf("Sub1-Sub1-Name: %s\n", mt.Subtests()[0].Subtests()[2].Name())
+	fmt.Printf(
+		"Sub1-Sub3-Failed: %+v\n", mt.Subtests()[0].Subtests()[2].Failed(),
+	)
+	fmt.Printf(
+		"Sub1-Sub3-Aborted: %+v\n", mt.Subtests()[0].Subtests()[2].Aborted(),
+	)
+	fmt.Printf(
+		"Sub1-Sub3-Output: %s\n", strings.TrimSpace(
+			strings.Join(mt.Subtests()[0].Subtests()[2].Output(), ""),
+		),
+	)
 
-[MIT](https://github.com/jimeh/go-mocktesting/blob/main/LICENSE)
+	// Output:
+	// Name: TestMyBoolean
+	// Failed: true
+	// Sub1-Name: TestMyBoolean/positive
+	// Sub1-Failed: true
+	// Sub1-Aborted: false
+	// Sub1-Sub1-Name: TestMyBoolean/positive/greater_than
+	// Sub1-Sub1-Failed: false
+	// Sub1-Sub1-Aborted: false
+	// Sub1-Sub1-Name: TestMyBoolean/positive/equal
+	// Sub1-Sub2-Failed: true
+	// Sub1-Sub2-Aborted: false
+	// Sub1-Sub3-Output: expected 5 to be greater than 5
+	// Sub1-Sub1-Name: TestMyBoolean/positive/less_than
+	// Sub1-Sub3-Failed: true
+	// Sub1-Sub3-Aborted: false
+	// Sub1-Sub3-Output: expected 4 to be greater than 5
+}
