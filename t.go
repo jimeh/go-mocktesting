@@ -1,6 +1,7 @@
 package mocktesting
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -40,17 +41,20 @@ type T struct {
 	timeout     bool
 
 	// State - Fields which record how T has been modified via method calls.
-	mux      sync.RWMutex
-	skipped  bool
-	failed   int
-	parallel bool
-	output   []string
-	helpers  []string
-	aborted  bool
-	cleanups []func()
-	env      map[string]string
-	subtests []*T
-	tempdirs []string
+	mux       sync.RWMutex
+	skipped   bool
+	failed    int
+	parallel  bool
+	output    []string
+	helpers   []string
+	aborted   bool
+	cleanups  []func()
+	env       map[string]string
+	subtests  []*T
+	tempdirs  []string
+	ctx       context.Context
+	ctxCancel context.CancelFunc
+	origDir   string
 
 	// subtestNames is used to ensure subtests do not have conflicting names.
 	subtestNames map[string]bool
@@ -70,12 +74,15 @@ type T struct {
 var _ testing.TB = (*T)(nil)
 
 func NewT(name string, options ...Option) *T {
+	ctx, cancel := context.WithCancel(context.Background())
 	t := &T{
 		name:        strings.ReplaceAll(name, " ", "_"),
 		abort:       true,
 		baseTempdir: os.TempDir(),
 		deadline:    time.Now().Add(10 * time.Minute),
 		timeout:     true,
+		ctx:         ctx,
+		ctxCancel:   cancel,
 	}
 
 	for _, opt := range options {
@@ -415,6 +422,11 @@ func (t *T) Run(name string, f func(testing.TB)) bool {
 
 	Go(func() {
 		f(subtest)
+		// Cancel subtest's context after test function completes
+		// but before cleanup functions run
+		if subtest.ctxCancel != nil {
+			subtest.ctxCancel()
+		}
 	})
 
 	if subtest.Failed() {
