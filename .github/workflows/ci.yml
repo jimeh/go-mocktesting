@@ -61,16 +61,11 @@ jobs:
           - macos-latest
           - windows-latest
         go_version:
-          - "1.15"
-          - "1.16"
-          - "1.17"
-          - "1.18"
-          - "1.19"
-          - "1.20"
-          - "1.21"
-          - "1.22"
-          - "1.23"
-          - "1.24"
+          # Only test versions where testing.T interface changed:
+          - "1.15"  # Base version
+          - "1.16"  # Added Setenv()
+          - "1.17"  # Representative of 1.17-1.23 (no changes)
+          - "1.24"  # Added Context() and Chdir()
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4

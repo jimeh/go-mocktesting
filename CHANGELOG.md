@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file. See [standa
 ### Features
 
 * **testing:** Add support for Go 1.24 Context() and Chdir() methods
-* **ci:** Test against Go 1.18-1.24 in addition to existing versions
+* **ci:** Optimize test matrix - only test Go versions with testing.T changes (1.15, 1.16, 1.17, 1.24)
 * **ci:** Upgrade all GitHub Actions to latest versions (v4-v6)
 
 ## 0.1.0 (2021-11-22)
